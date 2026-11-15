@@ -10,8 +10,8 @@ import OpenAI from "openai";
 import "dotenv/config";
 
 const client = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: "https://api.aiand.com/v1",
+  apiKey: process.env.AIAND_API_KEY,
 });
 
 export async function callModel(

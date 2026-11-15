@@ -72,3 +72,4 @@ next-env.d.ts
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,nodejs,nextjs
 .env
+results/

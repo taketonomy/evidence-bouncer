@@ -151,7 +151,7 @@ Keep Ken explicitly identified as a designed persona. Describe only demonstrated
 
 ## Initial repository context and limits (before this build)
 
-- Workspace: `/Users/iit1to2/projects/basically-ai-harness`.
+- Workspace: the repository root.
 - Existing TypeScript project with `agent/` and `eval/` demos.
 - Commands: `npm run agent` and `npm run eval`.
 - Both inspected model clients use `https://api.aiand.com/v1` and `AIAND_API_KEY`.

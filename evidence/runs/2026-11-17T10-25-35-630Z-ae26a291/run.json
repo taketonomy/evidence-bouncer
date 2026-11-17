@@ -352,7 +352,7 @@
     }
   ],
   "pack_id": "agent-harness-build-night-2026-11-17",
-  "pack_folder": "/Users/iit1to2/projects/basically-ai-harness/packs/tonight",
+  "pack_folder": "packs/tonight",
   "model": "google/gemma-4-31b-it",
   "repository_commit": "e923149f45c45254041792753b6d810674aac1f0",
   "evidence": [

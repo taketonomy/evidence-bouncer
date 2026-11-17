@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
 import { randomUUID, createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import "dotenv/config";
@@ -21,7 +21,7 @@ try {
   const model = process.env.AIAND_MODEL || pack.model;
   let commit: string | null = null;
   try { commit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch { /* Source hashes still identify pack bytes. */ }
-  Object.assign(run, { pack_id: pack.id, pack_folder: resolve(folder), model, repository_commit: commit, evidence: pack.sources, original_draft: pack.draft, draft_sha256: createHash("sha256").update(pack.draft).digest("hex"), prompts: pack.prompts, configuration: { max_tool_iterations: 3, temperature: 0 } });
+  Object.assign(run, { pack_id: pack.id, pack_folder: relative(process.cwd(), resolve(folder)) || ".", model, repository_commit: commit, evidence: pack.sources, original_draft: pack.draft, draft_sha256: createHash("sha256").update(pack.draft).digest("hex"), prompts: pack.prompts, configuration: { max_tool_iterations: 3, temperature: 0 } });
   console.log(`Evidence Bouncer | ${pack.id} | ${model}\n[generator] extracting claims from draft`);
   const generated = await generateClaims(model, pack.prompts.generator, pack.draft);
   run.claims = generated.claims;

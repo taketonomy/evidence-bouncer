@@ -34,7 +34,7 @@ const server = createServer(async (req, res) => {
       try { entries = (await readdir(resolve("results/bouncer"))).filter(id => runId.test(id)).sort().reverse(); } catch { /* No saved runs. */ }
       for (const id of entries) {
         const run = JSON.parse(await readFile(resolve("results/bouncer", id, "run.json"), "utf8"));
-        if (run.execution_status === "completed" && run.pack_folder === packFolder) return json(200, { run });
+        if (run.execution_status === "completed" && resolve(run.pack_folder) === packFolder) return json(200, { run });
       }
       return json(200, { run: null });
     }

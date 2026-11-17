@@ -1,5 +1,7 @@
 # mini-ai-harness
 
+Tonight's Evidence Bouncer build: see [the specification](spec.md), [run instructions](bouncer/README.md), and [three-minute demo](DEMO.md). The current model clients use AIAND and `AIAND_API_KEY`; the overview below describes the original upstream harness demos.
+
 A minimal TypeScript implementation of two kinds of AI harness, built for a talk on **harness engineering** at AI Engineer Europe 2026.
 
 Read the full write-up, with every step explained: [What Is an Agent Harness?](https://tej.as/blog/what-is-an-agent-harness). Watch the talk: [Harnesses in AI: A Deep Dive](https://www.youtube.com/watch?v=C_GG5g38vLU).
@@ -164,14 +166,18 @@ Tools don't manage the browser. They don't know about the browser lifecycle. The
 
 ```sh
 cp .env.example .env
-# add your OPENROUTER_API_KEY
+# add your AIAND_API_KEY and AIAND_MODEL (an exact listed model ID)
 npm install
-npx playwright install chromium
-npm run eval    # or
-npm run agent
+npm run models
+npm run smoke
+npm run bouncer -- packs/tonight
+# Original eval demo:
+npm run eval
+# Browser dependencies are already installed on the hackathon Mac.
+# npm run agent is the original browser agent and currently asks it to upvote.
 ```
 
-Get an OpenRouter key at [openrouter.ai](https://openrouter.ai).
+The shared client uses AIAND at `https://api.aiand.com/v1`. On the venue network, retain proxy environment variables; see [proxy setup](bouncer/README.md). Evidence Bouncer does not need a browser.
 
 ---
 

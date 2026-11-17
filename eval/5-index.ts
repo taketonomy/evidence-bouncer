@@ -14,8 +14,8 @@ import { scoreContains } from "./3-scorers.js";
 import { runEval } from "./4-runner.js";
 import type { EvalRun } from "./4-runner.js";
 
-// Swap any OpenRouter model ID here
-const MODELS = [process.env.AIAND_MODEL || "google/gemma-4-31b-it"];
+import { configuredModel } from "../shared/model.js";
+const MODELS = [configuredModel()];
 
 function printRun(run: EvalRun): void {
   console.log(`\n=== ${run.model} ===\n`);

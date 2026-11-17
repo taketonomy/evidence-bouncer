@@ -6,13 +6,7 @@
 // swap the model string to test a different one.
 // ─────────────────────────────────────────────
 
-import OpenAI from "openai";
-import "dotenv/config";
-
-const client = new OpenAI({
-  baseURL: "https://api.aiand.com/v1",
-  apiKey: process.env.AIAND_API_KEY,
-});
+import { client } from "../shared/model.js";
 
 export async function callModel(
   model: string,

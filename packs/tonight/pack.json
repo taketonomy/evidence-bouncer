@@ -1,0 +1,15 @@
+{
+  "id": "agent-harness-build-night-2026-11-17",
+  "model": "google/gemma-4-31b-it",
+  "draft": "draft.md",
+  "sources": [
+    { "id": "event-brief", "file": "sources/event-brief.md", "kind": "source", "authority": "User-supplied event report dated 2026-11-17 19:14 JST; not independently verified" },
+    { "id": "build-status", "file": "sources/build-status.md", "kind": "source", "authority": "User-supplied project status at 19:14 JST; historical snapshot, not current run evidence" }
+  ],
+  "prompts": {
+    "generator": "prompts/generator.txt",
+    "checker": "prompts/checker.txt",
+    "loop": "prompts/loop.txt",
+    "rewrite": "prompts/rewrite.txt"
+  }
+}

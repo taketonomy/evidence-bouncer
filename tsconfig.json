@@ -6,5 +6,5 @@
     "strict": true,
     "outDir": "dist"
   },
-  "include": ["eval/**/*.ts", "agent/**/*.ts"]
+  "include": ["eval/**/*.ts", "agent/**/*.ts", "shared/**/*.ts", "scripts/**/*.ts", "bouncer/**/*.ts"]
 }

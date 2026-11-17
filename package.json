@@ -3,7 +3,12 @@
   "type": "module",
   "scripts": {
     "eval": "tsx eval/5-index.ts",
-    "agent": "tsx agent/7-index.ts"
+    "agent": "tsx agent/7-index.ts",
+    "models": "tsx scripts/models.ts",
+    "smoke": "tsx scripts/smoke.ts",
+    "bouncer": "tsx bouncer/index.ts",
+    "check": "tsc --noEmit",
+    "test:bouncer": "tsx --test bouncer/*.test.ts"
   },
   "devDependencies": {
     "@types/node": "^25.3.5",
@@ -12,6 +17,7 @@
   },
   "dependencies": {
     "dotenv": "^17.3.1",
+    "https-proxy-agent": "^7.0.6",
     "openai": "^4.77.0",
     "playwright": "^1.50.0"
   }

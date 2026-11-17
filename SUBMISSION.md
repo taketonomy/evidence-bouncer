@@ -25,10 +25,11 @@ The synthetic demo application contains intentionally incorrect claims about ton
 
 Model judgments are fallible; citation existence is checked, but semantic correctness and exhaustive extraction still need human review. No drafts are automatically published or submitted. Automatic retrieval and reuse of previous reports, Neo4j integration, opportunity scouting, and automatic applications are not implemented. The externally made PV is promotional material, separate from harness execution.
 
-## Links to supply before submission
+## Links
 
-- Repository: add the intended accessible repository URL.
-- Demo or run evidence: `evidence/runs/2026-11-17T10-26-48-595Z-c7b5d673/scoreboard.md` once the repository is pushed (checked: contains no API key).
-- PV video: add the actual v4 video link if required.
+- Repository: https://github.com/taketonomy/evidence-bouncer
+- Recorded run (4 supported, 5 bounced, 1 unknown; pending human review): https://github.com/taketonomy/evidence-bouncer/blob/main/evidence/runs/2026-11-17T10-26-48-595Z-c7b5d673/scoreboard.md
+- Demo script: https://github.com/taketonomy/evidence-bouncer/blob/main/DEMO.md
+- PV video: add the actual v4 video link if required. The wordless PV is a private artifact; share it before linking.
 
 These are preparation notes, not a completed submission. The organizer's form and required fields have not been supplied.

@@ -1,5 +1,7 @@
 # Evidence Bouncer
 
+**[Open the public demo](https://evidence-bouncer-taketonomy.mobility-commons.chatgpt.site)** — no sign-in required. Anonymous access and a real hosted checker run have been verified. Results remain pending human review.
+
 Evidence Bouncer checks the factual claims in an AI-written draft against evidence you choose, before the draft goes out. Every claim gets a verdict, a reason, and an exact quote from your evidence. Nothing is sent, published or approved automatically.
 
 It is built for people who write with AI but have no one else to check the result: solo builders, freelancers, small teams. AI drafts sound confident even when a prize, a date or an achievement is invented. Checking every sentence by hand costs the time the AI was meant to save.

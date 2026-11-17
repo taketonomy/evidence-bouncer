@@ -1,0 +1,12 @@
+import { readFile, writeFile, mkdir, copyFile } from 'node:fs/promises';
+const assets = {};
+for (const name of ['index.html', 'app.js', 'style.css']) assets[name] = await readFile(`assets/${name}`, 'utf8');
+const pack = JSON.parse(await readFile('data/pack.json', 'utf8'));
+const recorded = JSON.parse(await readFile('data/recorded-run.json', 'utf8'));
+const core = (await readFile('core.js', 'utf8')).replace(/^export /gm, '');
+const worker = await readFile('worker.js', 'utf8');
+await mkdir('dist/server', { recursive: true });
+await mkdir('dist/.openai', { recursive: true });
+await writeFile('dist/server/index.js', `const ASSETS=${JSON.stringify(assets)};\nconst PACK=${JSON.stringify(pack)};\nconst RECORDED_RUN=${JSON.stringify(recorded)};\n${core}\n${worker}`);
+await copyFile('.openai/hosting.json', 'dist/.openai/hosting.json');
+console.log('Built self-contained Worker ESM with server-side AIAND access.');

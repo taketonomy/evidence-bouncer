@@ -1,0 +1,44 @@
+import { chromium } from 'playwright';
+import assert from 'node:assert/strict';
+import { mkdir, writeFile } from 'node:fs/promises';
+
+const browser = await chromium.launch({ headless: true });
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+  const errors = [];
+  page.on('pageerror', err => errors.push(err.message));
+  await page.goto('http://127.0.0.1:4317');
+  await page.waitForFunction(() => document.getElementById('run-kind').textContent.includes('RECORDED RUN'));
+  const { run: recorded } = await (await page.request.get('http://127.0.0.1:4317/api/latest')).json();
+  assert.equal(await page.locator('.claim').count(), recorded.claims.length);
+  await page.getByRole('button', { name: 'Bounced', exact: true }).click();
+  assert.equal(await page.locator('.claim').count(), recorded.verdicts.filter(v => ['unsupported', 'contradicted'].includes(v.status)).length);
+  await page.getByRole('button', { name: 'Unknown', exact: true }).click();
+  assert.equal(await page.locator('.claim').count(), recorded.verdicts.filter(v => v.status === 'unknown').length);
+  await page.getByRole('button', { name: 'All claims', exact: true }).click();
+  await page.locator('.claim summary').first().click();
+  assert.ok(await page.locator('.claim').first().locator('.citation').count());
+  await mkdir('results/web', { recursive: true });
+  await page.screenshot({ path: 'results/web/desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+  await page.screenshot({ path: 'results/web/mobile.png', fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  const original = await page.locator('#draft').inputValue();
+  await page.locator('#draft').fill(original + '\n');
+  assert.match(await page.locator('#run-kind').textContent(), /DRAFT CHANGED/);
+  await page.getByRole('button', { name: 'Reset example' }).click();
+  await page.getByRole('button', { name: 'Check the evidence' }).click();
+  assert.equal(await page.locator('#run').isDisabled(), true);
+  await page.waitForFunction(() => document.getElementById('progress').textContent.includes('Complete · report saved'), null, { timeout: 240000 });
+  await page.waitForFunction(() => !document.getElementById('run').disabled);
+  assert.equal(await page.locator('#error').isVisible(), false);
+  const trace = JSON.parse(await page.locator('#trace').textContent());
+  assert.equal(trace.execution_status, 'completed');
+  assert.equal(trace.approval_status, 'pending');
+  assert.ok(trace.trace.some(e => e.tool === 'check_claims'));
+  assert.equal(errors.length, 0, errors.join('\n'));
+  await page.screenshot({ path: 'results/web/live-result.png', fullPage: true });
+  await writeFile('results/web/smoke.json', JSON.stringify({ checked_at: new Date().toISOString(), run_id: trace.id, execution_status: trace.execution_status, approval_status: trace.approval_status, browser_errors: errors, checks: ['recorded-run load', 'claim filters', 'citations', 'mobile overflow', 'draft-change label', 'real browser-initiated model run'] }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', run_id: trace.id, supported: await page.locator('#count-supported').textContent(), bounced: await page.locator('#count-bounced').textContent(), unknown: await page.locator('#count-unknown').textContent(), screenshots: 'results/web/' }, null, 2));
+} finally { await browser.close(); }

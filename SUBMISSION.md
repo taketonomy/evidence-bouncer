@@ -27,6 +27,8 @@ Model judgments are fallible; citation existence is checked, but semantic correc
 
 ## Links
 
+- Public working demo (no sign-in required): https://evidence-bouncer-taketonomy.mobility-commons.chatgpt.site
+- Hosted verification: an anonymous browser completed a real check at 20:14 JST on 2026-11-17 (four supported, five bounced, one unknown; approval pending). Local artifacts: `results/public-web/`.
 - Repository: https://github.com/taketonomy/evidence-bouncer
 - Recorded run (4 supported, 5 bounced, 1 unknown; pending human review): https://github.com/taketonomy/evidence-bouncer/blob/main/evidence/runs/2026-11-17T10-26-48-595Z-c7b5d673/scoreboard.md
 - Demo script: https://github.com/taketonomy/evidence-bouncer/blob/main/DEMO.md

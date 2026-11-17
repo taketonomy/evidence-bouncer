@@ -4,6 +4,20 @@ Run a draft through an evidence-checking tool loop and save a claim scoreboard. 
 
 ## Run
 
+### Local web app
+
+```sh
+npm run web
+```
+
+Open http://127.0.0.1:4317. The app loads the latest completed recorded run, explicitly labels it recorded, and lets you edit the draft and start a real check. Filter claims, expand source citations, inspect source documents and run memory, copy the grounded rewrite, or download the run JSON. Live progress is polled from the local server; the API key stays server-side. Reports remain pending human review.
+
+The server binds only to loopback, serves a fixed allowlist of assets, checks request origin/host, and allows only one active model run. To choose another local pack, use `npm run web -- packs/your-pack`. Stop with Ctrl+C. The UI does not approve, publish, or submit drafts.
+
+Browser smoke verification: `node scripts/web-smoke.mjs` checks recorded-run rendering, filters, citations, mobile overflow, and one real browser-initiated model run. Screenshots and its result are saved under `results/web/`.
+
+### CLI
+
 The local `.env` must contain `AIAND_API_KEY`. Do not commit it or paste the key into logs.
 
 On the venue network, keep the proxy configured in the shell:

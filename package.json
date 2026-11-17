@@ -7,6 +7,7 @@
     "models": "tsx scripts/models.ts",
     "smoke": "tsx scripts/smoke.ts",
     "bouncer": "tsx bouncer/index.ts",
+    "web": "tsx bouncer/server.ts",
     "check": "tsc --noEmit",
     "test:bouncer": "tsx --test bouncer/*.test.ts"
   },

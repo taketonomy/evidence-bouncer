@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Evidence Bouncer — Check what gets through</title><link rel="stylesheet" href="/style.css"><script type="module" src="/app.js"></script></head>
+<body>
+  <header><a class="brand" href="/" aria-label="Evidence Bouncer home"><span class="mark">eb.</span><span>evidence bouncer<span class="brand-sub">BY TAKETONOMY</span></span></a><span class="local"><span class="dot"></span> PUBLIC DEMO</span></header>
+  <main>
+    <section class="intro"><div><div class="eyebrow">YOUR LAST CHECK BEFORE SEND</div><h1>Confidence needs<br><em>receipts.</em></h1><p>Check your draft against your evidence. Keep what's grounded.<br>Catch what isn't. Leave the unknowns to you.</p></div><div class="intro-note"><span class="note-label">THE RULE AT THE DOOR</span><p>No source?<br>No free pass.</p><span>Knowledge → tool → memory → rewrite</span></div></section>
+    <div class="workspace-bar"><span><span class="dot"></span> <strong id="pack-label">Loading evidence pack</strong></span><span id="model-label"></span></div>
+    <div class="workspace">
+      <aside class="input-column">
+        <section class="panel draft-panel"><div class="panel-heading"><div><span class="step">01</span><h2>The draft</h2></div><button class="text-button" id="reset">Reset example</button></div><p class="hint">A synthetic application with a few claims that shouldn't get through.</p><label class="sr-only" for="draft">Application draft</label><textarea id="draft" spellcheck="false" maxlength="20000" placeholder="Paste your draft here…"></textarea><div class="draft-footer"><span id="char-count">0 characters</span><span>Editable · Markdown</span></div><button class="run-button" id="run" disabled>Check the evidence <span>↗</span></button><p class="run-note">Runs the real checker through AIAND. Your results are saved in this browser session.</p></section>
+        <section class="panel knowledge-panel"><div class="panel-heading"><div><span class="step">02</span><h2>The evidence pack</h2></div><span class="small-badge" id="source-count">0 SOURCES</span></div><div id="sources"></div><p class="hint provenance">Tonight's facts are user-supplied event notes. A citation shows what the pack says; it isn't independent verification.</p></section>
+      </aside>
+      <section class="output-column" aria-label="Check results">
+        <div class="results-heading"><div><div class="eyebrow">THE VERDICT</div><h2>What gets through?</h2></div><span id="run-kind" class="small-badge">NO RUN YET</span></div>
+        <div class="scoreboard"><div class="score supported"><span>SUPPORTED</span><strong id="count-supported">—</strong><small>Evidence at the door</small></div><div class="score bounced"><span>BOUNCED</span><strong id="count-bounced">—</strong><small>Unsupported or contradicted</small></div><div class="score unknown"><span>UNKNOWN</span><strong id="count-unknown">—</strong><small>Your judgment needed</small></div></div>
+        <div id="progress" class="progress" role="status" aria-live="polite" hidden></div><div id="error" class="error" role="alert" hidden></div>
+        <div class="result-toolbar"><div class="filters" role="group" aria-label="Filter claims"><button data-filter="all" aria-pressed="true">All claims</button><button data-filter="supported" aria-pressed="false">Supported</button><button data-filter="bounced" aria-pressed="false">Bounced</button><button data-filter="unknown" aria-pressed="false">Unknown</button></div><span id="claim-count">0 claims</span></div>
+        <div id="claims" class="claims"><div class="empty">Your claims will line up here.<br><span>Run a check to see what has evidence behind it.</span></div></div>
+        <section class="panel rewrite-panel"><div class="panel-heading"><div><span class="step">03</span><h2>The grounded rewrite</h2></div><button class="text-button" id="copy" disabled>Copy text ↗</button></div><span class="pending">PENDING HUMAN REVIEW</span><div id="rewrite" class="rewrite">Only supported claim sentences will appear here.</div><div class="rewrite-footer"><span>Saved ≠ approved. Review before sending.</span><button class="text-button" id="download" disabled>Download run JSON ↓</button></div></section>
+        <details class="memory"><summary>Open run memory & trace</summary><pre id="trace">No run loaded.</pre></details>
+      </section>
+    </div>
+    <footer><span>AI writes faster than you can check. We check what gets through.</span><span>Ken is a fictional designed persona. No customer testimonials.</span></footer>
+  </main>
+</body></html>

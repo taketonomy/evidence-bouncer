@@ -1,5 +1,7 @@
 # Evidence Bouncer — three-minute demo
 
+Public demo: https://evidence-bouncer-taketonomy.mobility-commons.chatgpt.site (no sign-in required). It includes the recorded run and a live checker; visitor results are saved in the browser session with JSON download. The local app remains available as a fallback.
+
 Ken is a fictional, designed persona. His story and quote illustrate a problem; they are not customer research or testimonials.
 
 ## 0:00–0:25 — The problem
@@ -10,11 +12,13 @@ Optional: play the first 12 seconds of the wordless PV (the flood and the leak) 
 
 ## 0:25–0:50 — Show the draft and knowledge pack
 
-Open `packs/tonight/draft.md` and `packs/tonight/sources/event-brief.md`.
+Start `npm run web` and open http://127.0.0.1:4317. The initial scoreboard is labeled as a recorded run. Show the editable draft and expand an evidence-pack document. The underlying files are `packs/tonight/draft.md` and `packs/tonight/sources/event-brief.md`.
 
 “This is a synthetic application with deliberate errors. The pack contains tonight's user-supplied event notes, project status, and prompts. The draft claims judges choose the winners, that we've already won, and that Ken is a real customer. The pack says otherwise—or provides no evidence.”
 
 ## 0:50–1:45 — Run and show the harness
+
+Click **Check the evidence** in the web app. Watch live progress, then use the claim filters and expand a claim to show its exact source citation. The CLI alternative is:
 
 Prepare this terminal before the demo. Without the proxy variables, model calls fail with `ENOTFOUND` on the venue network:
 

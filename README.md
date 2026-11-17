@@ -1,188 +1,138 @@
-# mini-ai-harness
+# Evidence Bouncer
 
-Tonight's Evidence Bouncer build: see [the specification](spec.md), [run instructions](bouncer/README.md), and [three-minute demo](DEMO.md). The current model clients use AIAND and `AIAND_API_KEY`; the overview below describes the original upstream harness demos.
+Evidence Bouncer checks the factual claims in an AI-written draft against evidence you choose, before the draft goes out. Every claim gets a verdict, a reason, and an exact quote from your evidence. Nothing is sent, published or approved automatically.
 
-A minimal TypeScript implementation of two kinds of AI harness, built for a talk on **harness engineering** at AI Engineer Europe 2026.
-
-Read the full write-up, with every step explained: [What Is an Agent Harness?](https://tej.as/blog/what-is-an-agent-harness). Watch the talk: [Harnesses in AI: A Deep Dive](https://www.youtube.com/watch?v=C_GG5g38vLU).
+It is built for people who write with AI but have no one else to check the result: solo builders, freelancers, small teams. AI drafts sound confident even when a prize, a date or an achievement is invented. Checking every sentence by hand costs the time the AI was meant to save.
 
 ---
 
-## What is an AI harness?
+## How it works
 
-An AI harness is the infrastructure that gives an AI model tools and manages input/output behind the scenes, ensuring the model has the tools, context, and environment to do what's asked. It's the scaffolding that wraps around an LLM to make it useful for real-world tasks — not just answering one prompt, but doing actual work in a loop.
+```
+draft + evidence pack
+        │
+        ▼
+  1. generator ── extracts each factual claim, with its exact wording from the draft
+        │
+        ▼
+  2. review agent ── calls the check_claims tool until every claim is checked
+        │
+        ▼
+  3. checker ── a separate model call judges each claim against the evidence only
+        │
+        ▼
+  4. citation check ── code verifies every quote really exists in the cited file
+        │
+        ▼
+  5. report ── run.json + scoreboard.md, with references, hashes and approval: pending
+```
 
-The clearest one-liner: **an AI harness is everything except the model weights.**
+Each claim ends up with one of four outcomes:
 
-In practice that means: tool interfaces, context/memory handling, guardrails, verification steps, approval gates, logging, and recovery loops. Anthropic refers to their Claude Agent SDK as a "general-purpose agent harness" that provides built-in context management and tool use so Claude can function as a long-running assistant. OpenAI describes the same idea as orchestration. Anthropic calls the context layer context engineering.
+| Outcome | Meaning | What happens |
+| --- | --- | --- |
+| **Supported** | The evidence backs this exact claim, including date, scope and ownership. | Kept, with its source quote. |
+| **Contradicted** | The evidence says otherwise. | Bounced, with the conflicting quote. |
+| **Unsupported** | Nothing in the evidence backs it. This does not mean it is false. | Bounced for revision or more evidence. |
+| **Unknown** | Missing or ambiguous context, or a citation that failed to check out. | Sent back to a human to decide. |
+
+### Safeguards
+
+- **Citations are checked by code, not trusted.** If a quote the model cites is not an exact substring of the cited source, the verdict drops to Unknown.
+- **Claims must come from the draft.** Each extracted claim carries a quote that must appear word for word in the original draft.
+- **Provenance is recorded.** Every run saves the original draft, a SHA-256 hash of each source, the git commit, the model, the prompts and every model response ID.
+- **Failures are visible.** A missing input, a malformed model reply or an unfinished check produces a report marked `failed`, never an apparent success.
+- **A human approves.** Every report starts as `approval_status: pending`. Saving a report does not make it evidence; a past report can only be used as evidence once it is approved and still carries its original references.
+- **Inputs are data.** The prompts tell every model call to treat the draft and evidence as data, not instructions; this is a prompt rule, not a guarantee. `.env` files are refused as evidence, files outside the pack folder cannot be loaded, and API keys are redacted from errors.
 
 ---
 
-## What is harness engineering?
+## Quick start
 
-The term crystallized in February 2026 when Mitchell Hashimoto — co-founder of HashiCorp, creator of Terraform — published a blog post giving the practice a name:
-
-> Whenever an agent makes a mistake, you engineer the environment so it won't make that mistake again.
-
-Days later, OpenAI used the same phrase describing how they built an internal beta product: roughly one million lines of code, written entirely by agents, shipped in five months, with no manually written source code. Their key insight:
-
-> When something failed, the fix was almost never "try harder." Human engineers always stepped in and asked: what capability is missing, and how do we make it both legible and enforceable for the agent?
-
-Harness engineering shifts the engineer's job from writing code to designing environments, specifying intent, and providing structured feedback. The harness is the moat. The model is rented.
-
-According to Thoughtworks and OpenAI, a harness has three core components:
-
-1. **Context engineering** — deciding what information to include or exclude at each model call: isolation (keep subtasks separate), reduction (drop stale data to avoid context rot), retrieval (inject fresh docs or search results at the right time).
-2. **Architectural constraints** — enforced not just by the model, but by deterministic linters, structural tests, and guardrails the model cannot bypass.
-3. **Verification and feedback loops** — the harness checks outputs, runs eval steps, and if something is wrong, surfaces it so the agent or the engineer can fix it.
-
----
-
-## The two meanings of "harness" — and why both are in this repo
-
-The word has two distinct usages and conflating them causes real confusion.
-
-| | Eval harness | Agent harness |
-|---|---|---|
-| **Origin** | ML research, 2021 | Agentic engineering, 2026 |
-| **Example** | EleutherAI's LM Evaluation Harness | Claude Agent SDK, this repo |
-| **Purpose** | Measure model quality against known answers | Enable a model to act in the real world |
-| **Input** | Fixed dataset | Open-ended task |
-| **Output** | Scores and pass/fail | Answer + tool call log |
-| **Loop** | One call per test case | Iterates until done or guardrail fires |
-| **Tools** | None | Yes — the whole point |
-| **Guardrails** | Not needed | Essential |
-| **State** | Stateless | Conversation history across turns |
-
-EleutherAI's LM Evaluation Harness (2021) described itself as "a framework for few-shot evaluation of autoregressive language models." That's the older meaning. The agent harness is newer and fundamentally different in purpose.
-
-Both are in this repo so you can see them side by side.
-
----
-
-## What's in this repo
-
-```
-eval/        ← the eval harness (older meaning)
-agent/       ← the agent harness (newer meaning)
-```
-
-### `eval/` — test a model against known answers
-
-```
-dataset → model → scorer → pass/fail → summary
-```
-
-| File | Part | What it does |
-|---|---|---|
-| `1-dataset.ts` | Dataset | Fixed test cases with known expected outputs. Designed to trigger common hallucinations — the "obvious" answer is usually wrong. |
-| `2-model.ts` | Model | Calls any OpenRouter model with a prompt, returns a string. |
-| `3-scorers.ts` | Scorers | `exactMatch`, `contains`, `keywords` — normalizes number words ("Three" → "3") before comparing. |
-| `4-runner.ts` | Runner | Loops over cases, scores each, tracks whether the model fell for the trap answer. |
-| `5-index.ts` | Output | Runs multiple models against the same dataset, prints side-by-side comparison. |
+Needs Node.js and an API key for an OpenAI-compatible endpoint. The client is configured for ai& (`https://api.aiand.com/v1`) in `shared/model.ts`; change the base URL there to use another provider.
 
 ```sh
-npm run eval
-```
-
-### `agent/` — give a model a task and an environment
-
-```
-task → [tools + context + guardrails + loop + verify] → result
-```
-
-| File | Part | What it does |
-|---|---|---|
-| `1-tools.ts` | Tool registry | `createTools(session)` — tools are bound to the environment the harness provides, not a global they reach into. |
-| `2-model.ts` | Model client | OpenRouter via the OpenAI SDK. Swap models by changing one string. |
-| `3-context.ts` | Context / state | Builds initial context, trims old messages to prevent context rot. |
-| `4-guardrails.ts` | Guardrails | Composable safety checks (max iterations, max messages) that run before every loop iteration. |
-| `5-loop.ts` | Agent loop | Call model → use tools → feed result back → repeat. Stops when model answers or guardrail fires. |
-| `6-harness.ts` | The harness | Owns the full lifecycle: opens environment, creates tools, runs loop, verifies answer, closes environment. |
-| `browser.ts` | Environment | A `BrowserSession` — one isolated browser page per harness run, managed entirely by the harness. |
-
-```sh
-npm run agent
-```
-
----
-
-## How the agent demo works
-
-The task requires live data from the web:
-
-> "Go to https://news.ycombinator.com and tell me the exact title and current point score of the #1 story right now."
-
-The demo runs this against two models sequentially. Each gets its own browser session, opened and closed by the harness.
-
-**A model with good tool use** (e.g. `gpt-4o-mini`):
-```
-[iter 1] called 2 tool(s)  [ctx: 2 msgs]
-           → browser_navigate({"url":"https://news.ycombinator.com"})
-           → browser_get_text({})
-             ...Hacker News | #1: "Some Title" | 847 points...
-[iter 2] answered  [ctx: 6 msgs]
-
-Answer:  The #1 story is "Some Title" with 847 points.
-Verify:  ✓ PASS — Answer contains a point score
-```
-
-**A model that skips tools** (e.g. `stepfun/step-3.5-flash:free`):
-```
-[iter 1] answered  [ctx: 2 msgs]
-
-Answer:  The top story on Hacker News is "Some Made-Up Title" with 312 points.
-Verify:  ✗ FAIL — No point score found in answer
-```
-
-The contrast makes three things visible at once:
-
-- **Tools**: one model opens a real browser, the other hallucinates
-- **Context**: message count grows with each tool call — you can watch it
-- **Verify**: both models stopped without hitting a guardrail. The harness looked successful either way. Only the verify step caught the semantic failure.
-
-That last point is the key insight: **guardrails catch structural failures. Verify catches wrong answers. You need both.**
-
----
-
-## The harness owns the environment
-
-The architectural decision that makes this a real harness rather than just a loop with tools:
-
-```
-runHarness()
-  ├── session = new BrowserSession()   ← harness opens the environment
-  ├── tools   = createTools(session)   ← tools are bound to this session
-  ├── messages = createContext(task)   ← fresh context for this task
-  ├── result  = await runLoop(...)     ← loop runs inside the environment
-  └── session.close()                  ← always, even on error
-```
-
-Tools don't manage the browser. They don't know about the browser lifecycle. The harness opens it, the harness closes it, and the process exits cleanly. That's what "managing input/output behind the scenes" means in practice.
-
----
-
-## Setup
-
-```sh
-cp .env.example .env
-# add your AIAND_API_KEY and AIAND_MODEL (an exact listed model ID)
 npm install
-npm run models
-npm run smoke
+cp .env.example .env        # set AIAND_API_KEY, and AIAND_MODEL to a model ID
+npm run models              # list available model IDs; confirms the key works
+npm run smoke               # one real model call, saved to results/model-smoke.json
 npm run bouncer -- packs/tonight
-# Original eval demo:
-npm run eval
-# Browser dependencies are already installed on the hackathon Mac.
-# npm run agent is the original browser agent and currently asks it to upvote.
 ```
 
-The shared client uses AIAND at `https://api.aiand.com/v1`. On the venue network, retain proxy environment variables; see [proxy setup](bouncer/README.md). Evidence Bouncer does not need a browser.
+A run takes about 15 seconds and writes `results/bouncer/<run-id>/run.json` and `scoreboard.md`.
+
+If your network requires an HTTP proxy, export `https_proxy` (or `HTTPS_PROXY`) before running; the client picks it up automatically.
+
+Other commands:
+
+```sh
+npm run check               # TypeScript type-check
+npm run test:bouncer        # safety tests, no API calls
+```
 
 ---
 
-## Sources
+## Example output
 
-- Mitchell Hashimoto, [My AI Adoption Journey](https://mitchellh.com/writing/my-ai-adoption-journey) (February 2026) — coined "harness engineering" in its current agentic meaning
-- Anthropic, [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) — context engineering as a core harness component
-- EleutherAI, [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) — the older eval harness meaning (2021)
+From a recorded run of the example pack ([full report](evidence/runs/2026-11-17T10-26-48-595Z-c7b5d673/scoreboard.md)):
+
+```
+Execution: completed | Human approval: pending
+Supported: 4 · Bounced: 5 · Unknown: 1
+
+## c4 — CONTRADICTED
+Winners are selected by a panel of judges.
+- event-brief · sources/event-brief.md:10 · SHA-256 d55f0c6a…
+  "Winners are determined by peer vote. There are no judges."
+
+## c10 — UNKNOWN
+Our project is eligible to win tonight's prize.
+- build-status · sources/build-status.md:14 · SHA-256 0ce6c850…
+  "This pack does not record whether the project has submitted or participated
+   in a demo. Eligibility depends on those conditions; it cannot be determined
+   from this pack."
+```
+
+The example draft in `packs/tonight/` is synthetic and contains deliberate errors. Recorded runs are kept in [`evidence/`](evidence/README.md).
+
+---
+
+## Check your own drafts
+
+A pack is a folder. Copy `packs/tonight/` and replace its contents:
+
+```
+packs/my-proposal/
+├── pack.json           # id, model, which files are the draft, sources and prompts
+├── draft.md            # the AI-written text to check
+├── sources/            # your evidence: briefs, specs, status notes, past reports
+└── prompts/            # generator, checker, loop and rewrite instructions
+```
+
+Each source in `pack.json` has an `id`, a `file`, a `kind` and an `authority` line describing where it came from. No facts or prompts live in the code, so a client brief and a deliverable draft work the same way as the example. See [`bouncer/README.md`](bouncer/README.md) for details.
+
+---
+
+## Limitations
+
+- The checker is a language model. The citation check confirms a quote exists, not that it truly supports the conclusion. Read the report before acting on it.
+- Claim extraction can miss claims or split them differently between runs, so counts can vary from run to run.
+- The rewrite only reassembles supported claims. It does not yet propose corrections for bounced ones.
+- There is no web search or automatic retrieval. The evidence is exactly what you put in the pack.
+
+---
+
+## Built on mini-ai-harness
+
+This project grew out of [mini-ai-harness](https://github.com/TejasQ/basically-ai-harness) by TejasQ, a minimal TypeScript implementation of two kinds of AI harness built for a talk on harness engineering: [What Is an Agent Harness?](https://tej.as/blog/what-is-an-agent-harness) · [Harnesses in AI: A Deep Dive](https://www.youtube.com/watch?v=C_GG5g38vLU).
+
+Its two original demos are still here and use the same shared client:
+
+- `eval/`: an **eval harness**. A fixed dataset of hallucination traps, scored against known answers. `eval/meeting/` adds a meeting follow-up extraction eval. Run with `npm run eval`.
+- `agent/`: an **agent harness**. A tool-using loop that drives a real browser, with guardrails and a verify step. Run with `npx playwright install chromium` then `npm run agent`. Its current task acts on a live website, so read `agent/7-index.ts` before running it.
+
+Evidence Bouncer reuses the same idea at a smaller scale: the harness, not the model, decides what counts as done. Guardrails catch structural failures; verification catches wrong answers.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
